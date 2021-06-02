@@ -225,14 +225,25 @@ sendingProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)aSendingProgres
         && [httpMethod caseInsensitiveCompare:@"PUT"] != NSOrderedSame) {
         aRequest.URL = [aRequest.URL nxoauth2_URLByAddingParameters:parameters];
     } else {
-        NSInputStream *postBodyStream = [[NXOAuth2PostBodyStream alloc] initWithParameters:parameters];
-        
-        NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", [(NXOAuth2PostBodyStream *)postBodyStream boundary]];
-        NSString *contentLength = [NSString stringWithFormat:@"%lld", [(NXOAuth2PostBodyStream *)postBodyStream length]];
-        [aRequest setValue:contentType forHTTPHeaderField:@"Content-Type"];
-        [aRequest setValue:contentLength forHTTPHeaderField:@"Content-Length"];
-        
-        [aRequest setHTTPBodyStream:postBodyStream];
+        if([[aRequest.URL.lastPathComponent stringByDeletingPathExtension] isEqualToString:@"comments"])
+        {
+            NSString *contentType = @"application/json charset=utf-8";
+            [aRequest setValue:contentType forHTTPHeaderField:@"Content-Type"];
+            
+            NSString* body = parameters[@"comment[body]"];
+            aRequest.HTTPBody = [body dataUsingEncoding:NSUTF8StringEncoding];
+        }
+        else
+        {
+           NSInputStream *postBodyStream = [[NXOAuth2PostBodyStream alloc] initWithParameters:parameters];
+
+           NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", [(NXOAuth2PostBodyStream *)postBodyStream boundary]];
+           NSString *contentLength = [NSString stringWithFormat:@"%lld", [(NXOAuth2PostBodyStream *)postBodyStream length]];
+           [aRequest setValue:contentType forHTTPHeaderField:@"Content-Type"];
+           [aRequest setValue:contentLength forHTTPHeaderField:@"Content-Length"];
+
+           [aRequest setHTTPBodyStream:postBodyStream];
+        }
     }
 }
 
